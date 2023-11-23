@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  # Servicio de Base de Datos SQL
+  db:
+    image: mysql:latest
+    restart: always
+    volumes:
+      - ./db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpsw
+      MYSQL_DATABASE: to-do
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpsw
+    # ports:
+    #   - "3306:3306"
+    networks:
+      - db-network
+  
+  # Servicio de Nginx con Proxy
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./to-do/dist:/usr/share/nginx/html
+    ports:
+      - "80:80"
+      - "88:88"
+    networks:
+      - proxy-network
+
+  express-api:
+    build: .
+    restart: always
+    volumes:
+      - ./api:/app
+    command: "npm start"
+    # ports:
+    #   - "3000:3000"
+    networks:
+      - db-network
+      - proxy-network
+
+networks:
+  db-network:
+    driver: bridge
+  proxy-network:
+    driver: bridge
